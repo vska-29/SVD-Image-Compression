@@ -95,12 +95,32 @@ def save_comparison(original, compressed_images, labels):
 
 
 # Test the visualization module
+def svd_compress(image, rank):
+    """Temporary SVD compression for testing visualization."""
+    U, S, Vt = np.linalg.svd(image, full_matrices=False)
+
+    compressed = U[:, :rank] @ np.diag(S[:rank]) @ Vt[:rank, :]
+
+    return compressed
+
+def calculate_compression_ratio(image_shape, rank):
+    """Calculate theoretical SVD storage and compression ratio."""
+
+    m, n = image_shape
+
+    original_values = m * n
+    compressed_values = (m * rank) + rank + (rank * n)
+
+    compression_ratio = original_values / compressed_values
+
+    return compression_ratio
+
 if __name__ == "__main__":
 
     input_path = IMAGE_DIR / "input.jpg"
 
     if not input_path.exists():
-        print("ERROR: input.jpg was not found in the images folder.")
+        print("ERROR: input.jpg was not found.")
 
     else:
         original = load_image(input_path)
@@ -108,4 +128,43 @@ if __name__ == "__main__":
         print("Image loaded successfully.")
         print(f"Image dimensions: {original.shape[1]} x {original.shape[0]}")
 
-        display_original(original)
+        # Test different compression levels
+        ranks = [50, 20, 10]
+
+        compressed_images = []
+        compression_ratios = []
+
+        for rank in ranks:
+            compressed = svd_compress(original, rank)
+            compressed_images.append(compressed)
+            ratio = calculate_compression_ratio(original.shape, rank)
+            compression_ratios.append(ratio)
+
+            print(f"Rank {rank}: Compression ratio = {ratio:.2f}:1")
+
+            save_image(
+                compressed,
+                f"compressed_rank_{rank}.jpg"
+            )
+
+        # Display comparison
+        labels = [
+            "Rank 50",
+            "Rank 20",
+            "Rank 10"
+        ]
+
+        show_comparison(
+            original,
+            compressed_images,
+            labels
+        )
+
+        # Save comparison
+        save_comparison(
+            original,
+            compressed_images,
+            labels
+        )
+
+        print("Visualization completed.")
