@@ -18,15 +18,6 @@ def load_image(path):
     return np.array(image)
 
 
-def display_original(image):
-    """Display the original grayscale image."""
-    plt.figure(figsize=(6, 5))
-    plt.imshow(image, cmap="gray")
-    plt.title("Original Image")
-    plt.axis("off")
-    plt.show()
-
-
 def save_image(image, filename):
     """Save a reconstructed image."""
     image = np.clip(image, 0, 255).astype(np.uint8)
@@ -94,14 +85,19 @@ def save_comparison(original, compressed_images, labels):
     return output_path
 
 
-# Test the visualization module
 def svd_compress(image, rank):
-    """Temporary SVD compression for testing visualization."""
+    """Perform SVD compression using the specified rank."""
+
     U, S, Vt = np.linalg.svd(image, full_matrices=False)
 
-    compressed = U[:, :rank] @ np.diag(S[:rank]) @ Vt[:rank, :]
+    compressed = (
+        U[:, :rank]
+        @ np.diag(S[:rank])
+        @ Vt[:rank, :]
+    )
 
     return compressed
+
 
 def calculate_compression_ratio(image_shape, rank):
     """Calculate theoretical SVD storage and compression ratio."""
@@ -115,6 +111,36 @@ def calculate_compression_ratio(image_shape, rank):
 
     return compression_ratio
 
+
+def plot_compression_ratios(ranks, ratios):
+    """Plot compression ratio for different SVD ranks."""
+
+    fig = plt.figure(figsize=(7, 5))
+
+    plt.plot(ranks, ratios, marker="o")
+
+    plt.xlabel("SVD Rank")
+    plt.ylabel("Compression Ratio")
+    plt.title("SVD Rank vs Compression Ratio")
+
+    plt.grid(True)
+    plt.tight_layout()
+
+    output_path = OUTPUT_DIR / "compression_ratio.png"
+
+    fig.savefig(
+        output_path,
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.show()
+
+    plt.close(fig)
+
+    return output_path
+
+
 if __name__ == "__main__":
 
     input_path = IMAGE_DIR / "input.jpg"
@@ -123,10 +149,14 @@ if __name__ == "__main__":
         print("ERROR: input.jpg was not found.")
 
     else:
+
         original = load_image(input_path)
 
         print("Image loaded successfully.")
-        print(f"Image dimensions: {original.shape[1]} x {original.shape[0]}")
+        print(
+            f"Image dimensions: "
+            f"{original.shape[1]} x {original.shape[0]}"
+        )
 
         # Test different compression levels
         ranks = [50, 20, 10]
@@ -135,12 +165,22 @@ if __name__ == "__main__":
         compression_ratios = []
 
         for rank in ranks:
+
             compressed = svd_compress(original, rank)
+
             compressed_images.append(compressed)
-            ratio = calculate_compression_ratio(original.shape, rank)
+
+            ratio = calculate_compression_ratio(
+                original.shape,
+                rank
+            )
+
             compression_ratios.append(ratio)
 
-            print(f"Rank {rank}: Compression ratio = {ratio:.2f}:1")
+            print(
+                f"Rank {rank}: "
+                f"Compression ratio = {ratio:.2f}:1"
+            )
 
             save_image(
                 compressed,
@@ -165,6 +205,12 @@ if __name__ == "__main__":
             original,
             compressed_images,
             labels
+        )
+
+        # Create compression ratio graph
+        plot_compression_ratios(
+            ranks,
+            compression_ratios
         )
 
         print("Visualization completed.")
