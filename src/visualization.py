@@ -112,6 +112,17 @@ def calculate_compression_ratio(image_shape, rank):
     return compression_ratio
 
 
+def calculate_reconstruction_error(original, reconstructed):
+    """Calculate relative reconstruction error."""
+
+    error = (
+        np.linalg.norm(original - reconstructed)
+        / np.linalg.norm(original)
+    )
+
+    return error
+
+
 def plot_compression_ratios(ranks, ratios):
     """Plot compression ratio for different SVD ranks."""
 
@@ -135,7 +146,34 @@ def plot_compression_ratios(ranks, ratios):
     )
 
     plt.show()
+    plt.close(fig)
 
+    return output_path
+
+
+def plot_reconstruction_errors(ranks, errors):
+    """Plot reconstruction error for different SVD ranks."""
+
+    fig = plt.figure(figsize=(7, 5))
+
+    plt.plot(ranks, errors, marker="o")
+
+    plt.xlabel("SVD Rank")
+    plt.ylabel("Reconstruction Error")
+    plt.title("SVD Rank vs Reconstruction Error")
+
+    plt.grid(True)
+    plt.tight_layout()
+
+    output_path = OUTPUT_DIR / "reconstruction_error.png"
+
+    fig.savefig(
+        output_path,
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.show()
     plt.close(fig)
 
     return output_path
@@ -163,6 +201,7 @@ if __name__ == "__main__":
 
         compressed_images = []
         compression_ratios = []
+        reconstruction_errors = []
 
         for rank in ranks:
 
@@ -170,6 +209,7 @@ if __name__ == "__main__":
 
             compressed_images.append(compressed)
 
+            # Compression ratio
             ratio = calculate_compression_ratio(
                 original.shape,
                 rank
@@ -182,6 +222,20 @@ if __name__ == "__main__":
                 f"Compression ratio = {ratio:.2f}:1"
             )
 
+            # Reconstruction error
+            error = calculate_reconstruction_error(
+                original,
+                compressed
+            )
+
+            reconstruction_errors.append(error)
+
+            print(
+                f"Rank {rank}: "
+                f"Reconstruction error = {error:.4f}"
+            )
+
+            # Save compressed image
             save_image(
                 compressed,
                 f"compressed_rank_{rank}.jpg"
@@ -207,10 +261,16 @@ if __name__ == "__main__":
             labels
         )
 
-        # Create compression ratio graph
+        # Compression ratio graph
         plot_compression_ratios(
             ranks,
             compression_ratios
+        )
+
+        # Reconstruction error graph
+        plot_reconstruction_errors(
+            ranks,
+            reconstruction_errors
         )
 
         print("Visualization completed.")
