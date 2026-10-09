@@ -11,7 +11,8 @@ from src.visualization import (
 
 # Project paths
 ROOT = Path(__file__).resolve().parent
-IMAGE_PATH = ROOT / "images" / "input_image.jpg"
+image_name = input("Enter image filename: ").strip()
+IMAGE_PATH = ROOT / "images" / image_name
 RESULTS_PATH = ROOT / "results" / "results.csv"
 
 
